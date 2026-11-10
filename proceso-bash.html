@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYDRA // PROYECTO</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap');
+        :root {
+            --sat-black: #02060a;
+            --panel-bg: rgba(12, 22, 38, 0.8);
+            --mw-white: #e2e8f0;
+            --mw-cyan: #00f0ff;
+            --mw-cyan-dim: rgba(0, 240, 255, 0.15);
+            --mw-gray: #829ab1;
+            --mw-red: #ff2a2a;
+            --mw-green: #39ff14;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--sat-black); border-left: 1px solid var(--mw-cyan-dim); }
+        ::-webkit-scrollbar-thumb { background: var(--mw-cyan); }
+        body { position: relative;
+            background-color: var(--sat-black); color: var(--mw-gray); font-family: 'Share Tech Mono', monospace; overflow-x: hidden;
+            background-image: linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .scanlines { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 1px, transparent 1px, transparent 3px); z-index: 9998; pointer-events: none; }
+        .vignette { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 50%, transparent 20%, rgba(0,0,0,0.95) 100%); z-index: 9997; pointer-events: none; }
+        .bg-watermark { position: fixed; top: 50%; left: 60%; transform: translate(-50%, -50%) rotate(0deg); width: 80vw; height: 80vw; border-radius: 50%; border: 1px dashed var(--mw-cyan-dim); z-index: 1; opacity: 0.15; pointer-events: none; animation: spinRotate 200s linear infinite; }
+        .bg-watermark::before { content: '+'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--mw-cyan); font-size: 5rem; }
+        @keyframes spinRotate { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px; background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid var(--mw-cyan); display: flex; align-items: center; padding: 0 50px; z-index: 1000; backdrop-filter: blur(15px); box-shadow: 0 5px 30px rgba(0, 240, 255, 0.1);
+        }
+        .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--mw-white); letter-spacing: 8px; text-shadow: 0 0 15px rgba(0,240,255,0.5); }
+        .header-status { margin-left: auto; color: var(--mw-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: bold; letter-spacing: 4px; display: flex; align-items: center; gap: 15px; }
+        .status-dot { width: 12px; height: 12px; background: var(--mw-cyan); box-shadow: 0 0 15px var(--mw-cyan); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .container { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; padding-top: 70px; position: relative; z-index: 10; }
+        nav { background: rgba(2, 6, 12, 0.85); border-right: 1px solid var(--mw-cyan-dim); padding: 40px 0; height: calc(100vh - 70px); position: sticky; top: 70px; backdrop-filter: blur(10px); }
+        .nav-title { padding: 0 30px; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--mw-gray); letter-spacing: 4px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        nav ul { list-style: none; }
+        nav a {
+            display: flex; align-items: center; padding: 18px 30px; border-left: 3px solid transparent; cursor: pointer; transition: all 0.3s; font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; letter-spacing: 3px; color: var(--mw-gray); text-decoration: none; position: relative; overflow: hidden;
+        }
+        nav a::before { content: ''; position: absolute; left: -100%; top: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0,240,255,0.1), transparent); transition: left 0.5s; }
+        nav a:hover::before { left: 100%; }
+        nav a:hover { color: var(--mw-white); background: rgba(0, 240, 255, 0.05); }
+        nav .active { border-left-color: var(--mw-cyan); color: var(--mw-cyan); background: rgba(0, 240, 255, 0.1); text-shadow: 0 0 10px rgba(0,240,255,0.5); font-weight: bold; }
+        nav .active::after { content: '\25C4'; position: absolute; right: 20px; color: var(--mw-cyan); animation: slideLeft 1s infinite; }
+        @keyframes slideLeft { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+        main { padding: 50px 80px; max-width: 1400px; position: relative; }
+        .section {
+            background: var(--panel-bg); border: 1px solid var(--mw-cyan-dim); padding: 50px; margin-bottom: 50px; position: relative; backdrop-filter: blur(10px); opacity: 0; will-change: transform; transform: translateY(30px); animation: fadeInUp 0.6s cubic-bezier(0.2, 1, 0.2, 1) forwards;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
+        }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        .section::before, .section::after { content: ''; position: absolute; width: 30px; height: 30px; border: 2px solid var(--mw-cyan); transition: all 0.3s; }
+        .section::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .section::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+        .section:hover::before, .section:hover::after { width: 40px; height: 40px; }
+        .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 3.5rem; color: var(--mw-white); letter-spacing: 6px; margin-bottom: 25px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 20px; text-shadow: 0 0 20px rgba(0,240,255,0.4); }
+        .section-title::before { content: ''; width: 10px; height: 40px; background: var(--mw-cyan); box-shadow: 0 0 15px var(--mw-cyan); }
+        .text-block { font-size: 1.1rem; line-height: 1.8; margin-bottom: 25px; color: #94a3b8; }
+        .text-block strong { color: var(--mw-white); background: rgba(0,240,255,0.15); padding: 2px 6px; border-radius: 3px; border-bottom: 1px solid var(--mw-cyan); }
+        .endpoint-card {
+            background: rgba(0,0,0,0.7); border: 1px solid var(--mw-cyan-dim); padding: 25px; margin-bottom: 20px; position: relative; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .endpoint-card:hover { transform: translateX(10px); border-color: var(--mw-cyan); box-shadow: -5px 0 20px rgba(0,240,255,0.2); }
+        .endpoint-card::before { content: ''; position: absolute; top:0; left:0; width:4px; height:100%; background: var(--mw-cyan); }
+        .method { font-family: 'Rajdhani', sans-serif; font-weight: bold; padding: 5px 12px; border-radius: 2px; margin-right: 15px; font-size: 1.2rem; letter-spacing: 2px; }
+        .method.get { background: rgba(57, 255, 20, 0.1); color: var(--mw-green); border: 1px solid var(--mw-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        .method.post { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid #ffaa00; box-shadow: 0 0 10px rgba(255, 170, 0, 0.2); }
+        .url { font-family: 'Share Tech Mono', monospace; font-weight: bold; color: var(--mw-white); font-size: 1.2rem; }
+        .desc { margin-top: 15px; font-size: 1rem; color: var(--mw-gray); border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; }
+        .code-box {
+            background: #010409; border: 1px solid #1e293b; border-left: 3px solid var(--mw-cyan); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: #38bdf8; margin-top: 20px; white-space: pre-wrap; position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        .code-box::before { content: 'DECRYPTED PAYLOAD'; position: absolute; top: -12px; left: 15px; background: var(--sat-black); padding: 0 10px; font-size: 0.8rem; color: var(--mw-cyan); letter-spacing: 2px; border: 1px solid var(--mw-cyan-dim); }
+        .arch-diagram {
+            display: flex; flex-direction: column; gap: 40px; align-items: center; margin: 50px 0; padding: 50px; background: rgba(0, 240, 255, 0.02); border: 1px solid var(--mw-cyan-dim); position: relative;
+        }
+        .arch-diagram::before { content: 'PIPELINE SCHEMATIC'; position: absolute; top: 10px; left: 15px; font-family: 'Rajdhani'; color: var(--mw-gray); letter-spacing: 3px; font-size: 0.9rem; }
+        .node {
+            padding: 20px 40px; border: 2px solid var(--mw-cyan); color: var(--mw-white); font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 3px; background: rgba(0,0,0,0.9); text-align: center; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); transition: all 0.3s; position: relative; cursor: crosshair;
+        }
+        .node:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 240, 255, 0.5); background: rgba(0, 240, 255, 0.1); }
+        .node.client { border-color: var(--mw-white); }
+        .node.db { border-color: var(--mw-green); box-shadow: 0 0 20px rgba(57, 255, 20, 0.2); }
+        .node-sub { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--mw-cyan); display: block; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+        .arrow { width: 3px; height: 40px; background: var(--mw-cyan); position: relative; box-shadow: 0 0 10px var(--mw-cyan); }
+        .arrow::after { content: '\25BC'; position: absolute; bottom: -14px; left: -7px; color: var(--mw-cyan); font-size: 1rem; text-shadow: 0 0 10px var(--mw-cyan); }
+        .layer-box { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; width: 100%; border: 2px dashed rgba(0, 240, 255, 0.3); padding: 40px; position: relative; background: rgba(0,0,0,0.3); }
+        .layer-title { position: absolute; top: -15px; left: 30px; background: var(--sat-black); padding: 0 15px; color: var(--mw-cyan); font-weight: bold; font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; letter-spacing: 3px; border: 1px solid var(--mw-cyan); }
+        .footer { text-align: center; color: var(--mw-gray); font-size: 0.9rem; margin-top: 100px; padding-bottom: 50px; letter-spacing: 6px; opacity: 0.5; }
+        .hud-crosshair-x { position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: rgba(0, 240, 255, 0.4); pointer-events: none; z-index: 9999; box-shadow: 0 0 10px var(--mw-cyan); transition: opacity 0.2s; }
+        .hud-crosshair-y { position: absolute; top: 0; left: 0; width: 1px; height: 100%; background: rgba(0, 240, 255, 0.4); pointer-events: none; z-index: 9999; box-shadow: 0 0 10px var(--mw-cyan); transition: opacity 0.2s; }
+        .hud-target { position: absolute; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid rgba(0, 240, 255, 0.8); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: all 0.1s ease-out; box-shadow: inset 0 0 10px rgba(0,240,255,0.5); }
+        .hud-target::after { content:''; position:absolute; top:48%; left:48%; width:4px; height:4px; background:var(--mw-cyan); border-radius:50%; }
+        .scanner { position: fixed; top: -10%; left: 0; width: 100vw; height: 10vh; background: linear-gradient(to bottom, transparent, rgba(0,240,255,0.15), transparent); animation: scan 4s linear infinite; z-index: 9996; pointer-events: none; }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+        #bootOverlay { position:fixed;top:0;left:0;width:100vw;height:100vh;background:#02060a;z-index:10000;display:flex;align-items:center;justify-content:center; flex-direction: column; gap: 20px; transition: opacity 0.5s ease; }
+        .glitch-text { font-family: 'Share Tech Mono', monospace; font-size: 2.5rem; color: var(--mw-cyan); letter-spacing: 15px; position: relative; animation: glitch 1s linear infinite; text-shadow: 0 0 20px var(--mw-cyan); text-align: center;}
+        @keyframes glitch { 2%, 64% { transform: translate(2px,0) skew(0deg); } 4%, 60% { transform: translate(-2px,0) skew(0deg); } 62% { transform: translate(0,0) skew(5deg); } }
+        @keyframes crtFlicker { 0% { opacity: 0.98; } 5% { opacity: 0.90; filter: contrast(1.2); } 10% { opacity: 0.98; filter: contrast(1); } 100% { opacity: 1; } }
+        body { position: relative; animation: crtFlicker 3s infinite; }
+    </style>
+</head>
+<body>
+    <div class='hud-crosshair-x' id='hx'></div>
+    <div class='hud-crosshair-y' id='hy'></div>
+    <div class='hud-target' id='ht'></div>
+    <div class='scanner'></div>
+    <div id='bootOverlay'>
+        <div class='glitch-text'>ESTABLISHING SECURE CONNECTION...</div>
+    </div>
+
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="bg-watermark"></div>
+
+    <header>
+        <div class="header-title">HYDRA // PROYECTO</div>
+        <div class="header-status">
+            <div class="status-dot"></div>
+            LINK SECURE
+        </div>
+    </header>
+
+    <div class="container">
+        <nav>
+            <div class="nav-title">HYDRA // DATABANKS</div>
+            <ul>
+                <a href="proceso-bash.html" class="active">1. PROYECTO HYDRA</a>
+                <a href="arquitectura.html">2. ARQUITECTURA</a>
+                <a href="componentes.html">3. COMPONENTES</a>
+                <a href="implementacion.html">4. IMPLEMENTACION</a>
+                <a href="fundamentos.html">5. FUNDAMENTOS & DATOS</a>
+            </ul>
+        </nav>
+        <main>
+            <!-- SECTION 1: RESUMEN EJECUTIVO -->
+            <div class="section">
+                <div class="section-title">RESUMEN EJECUTIVO</div>
+                <div class="text-block">
+                    <strong>Hydra</strong> es un ecosistema digital de monitoreo y acompañamiento clínico para pacientes con <strong>prótesis robótica de mano</strong>. Integra aplicaciones móvil, de escritorio y web con una capa de microservicios Spring Boot y una base de datos PostgreSQL administrada en Supabase.
+                    <br><br>
+                    <strong>Objetivo:</strong> entregar información oportuna y segura a familiares, cuidadores y profesionales de la salud, supervisando constantes vitales, ubicación y comunicación con el equipo de atención.
+                    <br><br>
+                    <strong>Nodos del sistema:</strong> 4 microservicios independientes &middot; 3 clientes &middot; ESP32 WiFi/BLE &middot; PostgreSQL Supabase
+                    <br>
+                    <strong>Alcance:</strong> 24 requerimientos funcionales (R.1&ndash;R.24) y 10 no funcionales (R.25&ndash;R.34)
+                    <br>
+                    <strong>Gestión:</strong> 18 semanas &middot; costo HH $4.302.228 CLP &middot; precio final estimado $6.883.565 CLP
+                </div>
+            </div>
+
+            <!-- SECTION 2: PROBLEMA Y SOLUCION -->
+            <div class="section" style="animation-delay: 0.15s;">
+                <div class="section-title">PROBLEMA & SOLUCION</div>
+                <div class="text-block" style="border-left:3px solid var(--mw-red); padding-left:20px; margin-bottom:30px;">
+                    <div style="font-family:'Bebas Neue'; font-size:1.8rem; color:var(--mw-red); letter-spacing:4px; margin-bottom:10px;">EL PROBLEMA</div>
+                    Información clínica fragmentada entre actores y sistemas; desconexión entre médicos, pacientes, cuidadores y familiares; dependencia de controles presenciales que retrasa decisiones; respuesta tardía ante emergencias y anomalías vitales.
+                </div>
+                <div class="text-block" style="border-left:3px solid var(--mw-cyan); padding-left:20px; margin-bottom:30px;">
+                    <div style="font-family:'Bebas Neue'; font-size:1.8rem; color:var(--mw-cyan); letter-spacing:4px; margin-bottom:10px;">LA SOLUCION</div>
+                    Plataforma integrada web, móvil y de escritorio; conexión directa con la prótesis mediante ESP32; registro clínico centralizado y monitoreo en tiempo real; alertas oportunas, geolocalización y mensajería entre roles.
+                </div>
+                <div class="text-block" style="border-left:3px solid var(--mw-green); padding-left:20px;">
+                    <div style="font-family:'Bebas Neue'; font-size:1.8rem; color:var(--mw-green); letter-spacing:4px; margin-bottom:10px;">EL IMPACTO</div>
+                    Agiliza las alertas ante anomalías y mejora la coordinación médica. Protege datos sensibles mediante cifrado y control de acceso por roles. Entrega información oportuna y segura a familiares y equipo de salud. Aplica competencias full-stack, bases de datos e integración hardware/software en un contexto clínico real.
+                </div>
+            </div>
+
+            <!-- SECTION 3: OBJETIVOS -->
+            <div class="section" style="animation-delay: 0.3s;">
+                <div class="section-title">OBJETIVOS DEL PROYECTO</div>
+                <div class="text-block" style="border-left:3px solid var(--mw-cyan); padding-left:20px; margin-bottom:30px;">
+                    <strong>Objetivo general:</strong> Desarrollar un sistema de monitoreo y acompañamiento clínico que permita a familiares, cuidadores y profesionales de la salud supervisar constantes vitales, ubicación y comunicación con el equipo de atención, entregando información oportuna y segura.
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">OBJ 1</span> <span class="url">SEGURIDAD Y ACCESO</span></div>
+                    <div class="desc">Autenticación y autorización por roles, con validación de RUT y protección de datos sensibles.</div>
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">OBJ 2</span> <span class="url">FICHA CLINICA</span></div>
+                    <div class="desc">Fichas clínicas de pacientes con cobertura previsional (Fonasa / Isapre).</div>
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">OBJ 3</span> <span class="url">MONITOREO EN TIEMPO REAL</span></div>
+                    <div class="desc">Captura y visualización de frecuencia cardíaca y saturación de oxígeno vía ESP32.</div>
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">OBJ 4</span> <span class="url">ALERTAS OPORTUNAS</span></div>
+                    <div class="desc">Notificaciones cuando las constantes vitales salen de los rangos fisiológicos normales.</div>
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">OBJ 5</span> <span class="url">COMUNICACION</span></div>
+                    <div class="desc">Mensajería en tiempo real entre paciente, familiar, cuidador y médico, con archivos adjuntos.</div>
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">OBJ 6</span> <span class="url">REPORTES</span></div>
+                    <div class="desc">Reportes de seguimiento clínico y de cobertura para la toma de decisiones del equipo de salud.</div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: ALCANCE -->
+            <div class="section" style="animation-delay: 0.45s;">
+                <div class="section-title">ALCANCE DEL SISTEMA</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+                    <div class="endpoint-card">
+                        <div><span class="method get" style="background:rgba(57,255,20,0.1);color:var(--mw-green);border-color:var(--mw-green);">IN</span> <span class="url">QUE INCLUYE</span></div>
+                        <div class="desc">
+                            Aplicación móvil, aplicación de escritorio y plataforma web.<br><br>
+                            Integración con la prótesis robótica mediante ESP32 (WiFi / BLE).<br><br>
+                            Gestión de usuarios, roles y permisos.<br><br>
+                            Fichas clínicas, citas, recetas, exámenes, documentos y fotografías.<br><br>
+                            Monitoreo de BPM, saturación de oxígeno, batería y geolocalización.<br><br>
+                            Historial, reportes, alertas clínicas y emergencias.<br><br>
+                            Solicitudes de prótesis y mensajería con adjuntos.
+                        </div>
+                    </div>
+                    <div class="endpoint-card" style="border-left-color:var(--mw-red);">
+                        <div><span class="method post">OUT</span> <span class="url">QUE EXCLUYE</span></div>
+                        <div class="desc">
+                            No reemplaza la atención médica profesional.<br><br>
+                            No realiza diagnósticos médicos autónomos.<br><br>
+                            No ejecuta procedimientos quirúrgicos.<br><br>
+                            No modifica físicamente la prótesis de forma automática.<br><br>
+                            Su función es entregar información y herramientas digitales de apoyo al seguimiento y la toma de decisiones.
+                        </div>
+                    </div>
+                </div>
+                <div class="text-block" style="margin-top:30px; border-top:1px solid var(--mw-cyan-dim); padding-top:20px;">
+                    <strong>Sistema de alta criticidad:</strong> maneja información médica, datos personales y geolocalización.
+                </div>
+            </div>
+
+            <!-- SECTION 5: USUARIOS Y ROLES -->
+            <div class="section" style="animation-delay: 0.6s;">
+                <div class="section-title">USUARIOS Y ROLES</div>
+                <div class="text-block">El acceso a funcionalidades y datos está determinado por el rol asignado.</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div class="endpoint-card"><div><span class="method get">ROL</span> <span class="url">PACIENTE</span></div><div class="desc">App móvil. Consulta su tratamiento, monitoreo y recibe notificaciones.</div></div>
+                    <div class="endpoint-card"><div><span class="method get">ROL</span> <span class="url">MEDICO</span></div><div class="desc">Seguimiento clínico, citas, exámenes, recetas y monitoreo.</div></div>
+                    <div class="endpoint-card"><div><span class="method get">ROL</span> <span class="url">CUIDADOR</span></div><div class="desc">Seguimiento de los pacientes asignados y consulta de información relevante.</div></div>
+                    <div class="endpoint-card"><div><span class="method get">ROL</span> <span class="url">ADMINISTRADOR</span></div><div class="desc">Gestión de usuarios, empleados, roles y procesos administrativos.</div></div>
+                    <div class="endpoint-card"><div><span class="method get">ROL</span> <span class="url">AUTORIZADOR</span></div><div class="desc">Revisa y aprueba solicitudes de prótesis y determinados medicamentos.</div></div>
+                    <div class="endpoint-card"><div><span class="method get">ROL</span> <span class="url">FAMILIAR</span></div><div class="desc">Consulta información autorizada, seguimiento y alertas de emergencia.</div></div>
+                </div>
+            </div>
+
+            <!-- SECTION 6: EQUIPO Y METODOLOGIA -->
+            <div class="section" style="animation-delay: 0.75s;">
+                <div class="section-title">EQUIPO & METODOLOGIA</div>
+                <div class="text-block" style="border-left:3px solid var(--mw-cyan); padding-left:20px; margin-bottom:30px;">
+                    <strong>Equipo:</strong> Luis Aguirre (Jefe de Proyecto / Analista Programador) &middot; Benjamín Contreras (DBA / Administrador de BD) &middot; Francisco Carrasco (QA / Calidad).
+                    <br><br>
+                    <strong>Metodología:</strong> enfoque iterativo-incremental con planificación en cascada y ciclos semanales.
+                </div>
+                <div class="endpoint-card"><div><span class="method get">FASE</span> <span class="url">ANALISIS Y DISEÑO</span></div><div class="desc">Levantamiento de requerimientos (casos de uso, ERS), arquitectura (DAS) y modelo relacional.</div></div>
+                <div class="endpoint-card"><div><span class="method get">FASE</span> <span class="url">DESARROLLO FULL-STACK</span></div><div class="desc">Backend Spring Boot, app móvil Angular/Ionic, escritorio Electron e interfaz web Astro.</div></div>
+                <div class="endpoint-card"><div><span class="method get">FASE</span> <span class="url">INTEGRACION DE HARDWARE</span></div><div class="desc">Conexión del sensor ESP32 mediante Bluetooth Low Energy y WiFi.</div></div>
+                <div class="endpoint-card"><div><span class="method get">FASE</span> <span class="url">PRUEBAS Y DESPLIEGUE</span></div><div class="desc">Pruebas de humo, revisión estática y despliegue en la nube por microservicios.</div></div>
+            </div>
+
+            <div class="footer">
+                END OF INTEL // HYDRA &middot; PROYECTO APT &middot; FASE 2
+            </div>
+        </main>
+    </div>
+
+<script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playClickSound() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(1500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        }
+        document.querySelectorAll('a').forEach(a => { a.addEventListener('click', () => playClickSound()); });
+        document.addEventListener('mousemove', (e) => {
+            document.getElementById('hx').style.top = e.pageY + 'px';
+            document.getElementById('hy').style.left = e.pageX + 'px';
+            document.getElementById('ht').style.top = e.pageY + 'px';
+            document.getElementById('ht').style.left = e.pageX + 'px';
+        });
+        document.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('.section');
+            const wh = window.innerHeight;
+            sections.forEach(s => {
+                const rect = s.getBoundingClientRect();
+                const center = rect.top + rect.height / 2;
+                const offset = (center - wh / 2) / wh;
+                s.style.transform = `translateY(${offset * -6}px)`;
+            });
+        });
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('bootOverlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('bootOverlay').style.display = 'none', 500);
+            }, 800);
+        };
+    </script>
+<script src="audio.js" data-audio="mw.mp3"></script>
+</body>
+</html>

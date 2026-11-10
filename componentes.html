@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYDRA // COMPONENTES</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Rajdhani:wght@500;600;700&display=swap');
+        :root {
+            --sat-black: #02060a;
+            --panel-bg: rgba(12, 22, 38, 0.8);
+            --mw-white: #e2e8f0;
+            --mw-cyan: #00f0ff;
+            --mw-cyan-dim: rgba(0, 240, 255, 0.15);
+            --mw-gray: #829ab1;
+            --mw-red: #ff2a2a;
+            --mw-green: #39ff14;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair !important; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--sat-black); border-left: 1px solid var(--mw-cyan-dim); }
+        ::-webkit-scrollbar-thumb { background: var(--mw-cyan); }
+        body { position: relative;
+            background-color: var(--sat-black); color: var(--mw-gray); font-family: 'Share Tech Mono', monospace; overflow-x: hidden;
+            background-image: linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .scanlines { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 1px, transparent 1px, transparent 3px); z-index: 9998; pointer-events: none; }
+        .vignette { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: radial-gradient(circle at 50% 50%, transparent 20%, rgba(0,0,0,0.95) 100%); z-index: 9997; pointer-events: none; }
+        .bg-watermark { position: fixed; top: 50%; left: 60%; transform: translate(-50%, -50%) rotate(0deg); width: 80vw; height: 80vw; border-radius: 50%; border: 1px dashed var(--mw-cyan-dim); z-index: 1; opacity: 0.15; pointer-events: none; animation: spinRotate 200s linear infinite; }
+        .bg-watermark::before { content: '+'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--mw-cyan); font-size: 5rem; }
+        @keyframes spinRotate { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+        header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px; background: rgba(0, 0, 0, 0.8); border-bottom: 2px solid var(--mw-cyan); display: flex; align-items: center; padding: 0 50px; z-index: 1000; backdrop-filter: blur(15px); box-shadow: 0 5px 30px rgba(0, 240, 255, 0.1);
+        }
+        .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem; color: var(--mw-white); letter-spacing: 8px; text-shadow: 0 0 15px rgba(0,240,255,0.5); }
+        .header-status { margin-left: auto; color: var(--mw-cyan); font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; font-weight: bold; letter-spacing: 4px; display: flex; align-items: center; gap: 15px; }
+        .status-dot { width: 12px; height: 12px; background: var(--mw-cyan); box-shadow: 0 0 15px var(--mw-cyan); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .container { display: grid; grid-template-columns: 320px 1fr; min-height: 100vh; padding-top: 70px; position: relative; z-index: 10; }
+        nav { background: rgba(2, 6, 12, 0.85); border-right: 1px solid var(--mw-cyan-dim); padding: 40px 0; height: calc(100vh - 70px); position: sticky; top: 70px; backdrop-filter: blur(10px); }
+        .nav-title { padding: 0 30px; font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: var(--mw-gray); letter-spacing: 4px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; }
+        nav ul { list-style: none; }
+        nav a {
+            display: flex; align-items: center; padding: 18px 30px; border-left: 3px solid transparent; cursor: pointer; transition: all 0.3s; font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; letter-spacing: 3px; color: var(--mw-gray); text-decoration: none; position: relative; overflow: hidden;
+        }
+        nav a::before { content: ''; position: absolute; left: -100%; top: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0,240,255,0.1), transparent); transition: left 0.5s; }
+        nav a:hover::before { left: 100%; }
+        nav a:hover { color: var(--mw-white); background: rgba(0, 240, 255, 0.05); }
+        nav .active { border-left-color: var(--mw-cyan); color: var(--mw-cyan); background: rgba(0, 240, 255, 0.1); text-shadow: 0 0 10px rgba(0,240,255,0.5); font-weight: bold; }
+        nav .active::after { content: '\25C4'; position: absolute; right: 20px; color: var(--mw-cyan); animation: slideLeft 1s infinite; }
+        @keyframes slideLeft { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-5px); } }
+        main { padding: 50px 80px; max-width: 1400px; position: relative; }
+        .section {
+            background: var(--panel-bg); border: 1px solid var(--mw-cyan-dim); padding: 50px; margin-bottom: 50px; position: relative; backdrop-filter: blur(10px); opacity: 0; will-change: transform; transform: translateY(30px); animation: fadeInUp 0.6s cubic-bezier(0.2, 1, 0.2, 1) forwards;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.5);
+        }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        .section::before, .section::after { content: ''; position: absolute; width: 30px; height: 30px; border: 2px solid var(--mw-cyan); transition: all 0.3s; }
+        .section::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .section::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+        .section:hover::before, .section:hover::after { width: 40px; height: 40px; }
+        .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 3.5rem; color: var(--mw-white); letter-spacing: 6px; margin-bottom: 25px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 20px; text-shadow: 0 0 20px rgba(0,240,255,0.4); }
+        .section-title::before { content: ''; width: 10px; height: 40px; background: var(--mw-cyan); box-shadow: 0 0 15px var(--mw-cyan); }
+        .subsection-title { font-family: 'Rajdhani', sans-serif; font-size: 1.8rem; font-weight: bold; color: var(--mw-white); letter-spacing: 4px; margin: 30px 0 15px 0; padding-left: 15px; border-left: 3px solid var(--mw-cyan); }
+        .subsection-title.bash { border-left-color: var(--mw-gray); color: var(--mw-white); }
+        .subsection-title.streaming { border-left-color: var(--mw-cyan); color: var(--mw-cyan); }
+        .text-block { font-size: 1.1rem; line-height: 1.8; margin-bottom: 25px; color: #94a3b8; }
+        .text-block strong { color: var(--mw-white); background: rgba(0,240,255,0.15); padding: 2px 6px; border-radius: 3px; border-bottom: 1px solid var(--mw-cyan); }
+        .endpoint-card {
+            background: rgba(0,0,0,0.7); border: 1px solid var(--mw-cyan-dim); padding: 25px; margin-bottom: 20px; position: relative; transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .endpoint-card:hover { transform: translateX(10px); border-color: var(--mw-cyan); box-shadow: -5px 0 20px rgba(0,240,255,0.2); }
+        .endpoint-card::before { content: ''; position: absolute; top:0; left:0; width:4px; height:100%; background: var(--mw-cyan); }
+        .endpoint-card.batch::before { background: var(--mw-gray); }
+        .method { font-family: 'Rajdhani', sans-serif; font-weight: bold; padding: 5px 12px; border-radius: 2px; margin-right: 15px; font-size: 1.2rem; letter-spacing: 2px; }
+        .method.get { background: rgba(57, 255, 20, 0.1); color: var(--mw-green); border: 1px solid var(--mw-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
+        .method.post { background: rgba(255, 170, 0, 0.1); color: #ffaa00; border: 1px solid #ffaa00; box-shadow: 0 0 10px rgba(255, 170, 0, 0.2); }
+        .url { font-family: 'Share Tech Mono', monospace; font-weight: bold; color: var(--mw-white); font-size: 1.2rem; }
+        .desc { margin-top: 15px; font-size: 1rem; color: var(--mw-gray); border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; }
+        .code-box {
+            background: #010409; border: 1px solid #1e293b; border-left: 3px solid var(--mw-cyan); padding: 20px; font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: #38bdf8; margin-top: 20px; white-space: pre-wrap; position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        .code-box::before { content: 'DECRYPTED PAYLOAD'; position: absolute; top: -12px; left: 15px; background: var(--sat-black); padding: 0 10px; font-size: 0.8rem; color: var(--mw-cyan); letter-spacing: 2px; border: 1px solid var(--mw-cyan-dim); }
+        .arch-diagram {
+            display: flex; flex-direction: column; gap: 40px; align-items: center; margin: 50px 0; padding: 50px; background: rgba(0, 240, 255, 0.02); border: 1px solid var(--mw-cyan-dim); position: relative;
+        }
+        .arch-diagram::before { content: 'SYSTEM SCHEMATIC'; position: absolute; top: 10px; left: 15px; font-family: 'Rajdhani'; color: var(--mw-gray); letter-spacing: 3px; font-size: 0.9rem; }
+        .node {
+            padding: 20px 40px; border: 2px solid var(--mw-cyan); color: var(--mw-white); font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 3px; background: rgba(0,0,0,0.9); text-align: center; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); transition: all 0.3s; position: relative; cursor: crosshair;
+        }
+        .node:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(0, 240, 255, 0.5); background: rgba(0, 240, 255, 0.1); }
+        .node.client { border-color: var(--mw-white); }
+        .node.db { border-color: var(--mw-green); box-shadow: 0 0 20px rgba(57, 255, 20, 0.2); }
+        .node.batch { border-color: var(--mw-gray); box-shadow: 0 0 20px rgba(130, 154, 177, 0.2); }
+        .node-sub { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: var(--mw-cyan); display: block; margin-top: 5px; letter-spacing: 1px; text-transform: uppercase; }
+        .arrow { width: 3px; height: 40px; background: var(--mw-cyan); position: relative; box-shadow: 0 0 10px var(--mw-cyan); }
+        .arrow::after { content: '\25BC'; position: absolute; bottom: -14px; left: -7px; color: var(--mw-cyan); font-size: 1rem; text-shadow: 0 0 10px var(--mw-cyan); }
+        .arrow.batch { background: var(--mw-gray); box-shadow: 0 0 10px rgba(130,154,177,0.5); }
+        .arrow.batch::after { color: var(--mw-gray); }
+        .layer-box { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; width: 100%; border: 2px dashed rgba(0, 240, 255, 0.3); padding: 40px; position: relative; background: rgba(0,0,0,0.3); }
+        .layer-title { position: absolute; top: -15px; left: 30px; background: var(--sat-black); padding: 0 15px; color: var(--mw-cyan); font-weight: bold; font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; letter-spacing: 3px; border: 1px solid var(--mw-cyan); }
+        .footer { text-align: center; color: var(--mw-gray); font-size: 0.9rem; margin-top: 100px; padding-bottom: 50px; letter-spacing: 6px; opacity: 0.5; }
+        .hud-crosshair-x { position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: rgba(0, 240, 255, 0.4); pointer-events: none; z-index: 9999; box-shadow: 0 0 10px var(--mw-cyan); transition: opacity 0.2s; }
+        .hud-crosshair-y { position: absolute; top: 0; left: 0; width: 1px; height: 100%; background: rgba(0, 240, 255, 0.4); pointer-events: none; z-index: 9999; box-shadow: 0 0 10px var(--mw-cyan); transition: opacity 0.2s; }
+        .hud-target { position: absolute; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid rgba(0, 240, 255, 0.8); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: all 0.1s ease-out; box-shadow: inset 0 0 10px rgba(0,240,255,0.5); }
+        .hud-target::after { content:''; position:absolute; top:48%; left:48%; width:4px; height:4px; background:var(--mw-cyan); border-radius:50%; }
+        .scanner { position: fixed; top: -10%; left: 0; width: 100vw; height: 10vh; background: linear-gradient(to bottom, transparent, rgba(0,240,255,0.15), transparent); animation: scan 4s linear infinite; z-index: 9996; pointer-events: none; }
+        @keyframes scan { 0% { top: -10%; } 100% { top: 110%; } }
+        #bootOverlay { position:fixed;top:0;left:0;width:100vw;height:100vh;background:#02060a;z-index:10000;display:flex;align-items:center;justify-content:center; flex-direction: column; gap: 20px; transition: opacity 0.5s ease; }
+        .glitch-text { font-family: 'Share Tech Mono', monospace; font-size: 2.5rem; color: var(--mw-cyan); letter-spacing: 15px; position: relative; animation: glitch 1s linear infinite; text-shadow: 0 0 20px var(--mw-cyan); text-align: center;}
+        @keyframes glitch { 2%, 64% { transform: translate(2px,0) skew(0deg); } 4%, 60% { transform: translate(-2px,0) skew(0deg); } 62% { transform: translate(0,0) skew(5deg); } }
+        @keyframes crtFlicker { 0% { opacity: 0.98; } 5% { opacity: 0.90; filter: contrast(1.2); } 10% { opacity: 0.98; filter: contrast(1); } 100% { opacity: 1; } }
+        body { position: relative; animation: crtFlicker 3s infinite; }
+    </style>
+</head>
+<body>
+    <div class='hud-crosshair-x' id='hx'></div>
+    <div class='hud-crosshair-y' id='hy'></div>
+    <div class='hud-target' id='ht'></div>
+    <div class='scanner'></div>
+    <div id='bootOverlay'>
+        <div class='glitch-text'>ESTABLISHING SECURE CONNECTION...</div>
+    </div>
+
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+    <div class="bg-watermark"></div>
+
+    <header>
+        <div class="header-title">HYDRA // COMPONENTES</div>
+        <div class="header-status">
+            <div class="status-dot"></div>
+            LINK SECURE
+        </div>
+    </header>
+
+    <div class="container">
+        <nav>
+            <div class="nav-title">HYDRA // DATABANKS</div>
+            <ul>
+                <a href="proceso-bash.html">1. PROYECTO HYDRA</a>
+                <a href="arquitectura.html">2. ARQUITECTURA</a>
+                <a href="componentes.html" class="active">3. COMPONENTES</a>
+                <a href="implementacion.html">4. IMPLEMENTACION</a>
+                <a href="fundamentos.html">5. FUNDAMENTOS & DATOS</a>
+            </ul>
+        </nav>
+        <main>
+            <!-- SECTION 1: MICROSERVICIOS -->
+            <div class="section">
+                <div class="section-title">MICROSERVICIOS HYDRA</div>
+                <div class="text-block">
+                    Cuatro microservicios Spring Boot independientes sobre PostgreSQL en Supabase. Cada uno se despliega por separado y expone su propio puerto.
+                </div>
+
+                <div class="arch-diagram">
+                    <div class="node client">CLIENTES // APK &middot; ESCRITORIO &middot; WEB</div>
+                    <div class="arrow"></div>
+                    <div class="layer-box">
+                        <div class="layer-title">ECOSISTEMA DE MICROSERVICIOS</div>
+                        <div class="node">HYDRA_CRUD<span class="node-sub">8080</span></div>
+                        <div class="node">HYDRA_ARM_SECURITY<span class="node-sub">8081</span></div>
+                        <div class="node">GEOLOCALIZACION<span class="node-sub">8082</span></div>
+                        <div class="node">HYDRA_REALTIME<span class="node-sub">8083</span></div>
+                    </div>
+                    <div class="arrow"></div>
+                    <div class="node db">POSTGRESQL // SUPABASE</div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div><span class="method get">CRUD</span> <span class="url">HYDRA_CRUD &mdash; PUERTO 8080</span></div>
+                    <div class="desc">CRUD clínico principal: pacientes, fichas, citas, recetas, exámenes, documentos y fotografías. Valida reglas de negocio y expone los recursos clínicos al resto de las interfaces.</div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div><span class="method get">SEC</span> <span class="url">HYDRA_ARM_SECURITY &mdash; PUERTO 8081</span></div>
+                    <div class="desc">Autenticación y autorización. Emite JWT firmados con RSA256, aplica RBAC, cifra el RUT y los mensajes, y administra los archivos adjuntos con acceso controlado.</div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div><span class="method get">GEO</span> <span class="url">GEOLOCALIZACION &mdash; PUERTO 8082</span></div>
+                    <div class="desc">Registra y consulta la ubicación del paciente, habilita el seguimiento en mapas y entrega datos para alertas de zona y emergencias.</div>
+                </div>
+
+                <div class="endpoint-card">
+                    <div><span class="method get">RT</span> <span class="url">HYDRA_REALTIME &mdash; PUERTO 8083</span></div>
+                    <div class="desc">Puente de eventos en tiempo real mediante SSE. Distribuye BPM, SpO2, batería y alertas clínicas a la APK, la aplicación de escritorio y la web.</div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: CLIENTES -->
+            <div class="section" style="animation-delay: 0.15s;">
+                <div class="section-title">CLIENTES DEL ECOSISTEMA</div>
+                <div class="text-block">Tres interfaces comparten el mismo backend y el mismo modelo de datos, adaptadas a cada contexto de uso.</div>
+                <div class="endpoint-card">
+                    <div><span class="method get">APK</span> <span class="url">APLICACION MOVIL</span></div>
+                    <div class="desc">Angular 20 + Ionic 8 + Capacitor 8 + TypeScript. Vista del paciente y del familiar: monitoreo, alertas, selección de pacientes y perfil clínico.</div>
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">EXE</span> <span class="url">APLICACION DE ESCRITORIO</span></div>
+                    <div class="desc">Electron + HTML/CSS/JavaScript + Leaflet. Paneles de médico, cuidador, administrador y autorizador; gestión clínica, recetas, documentos, chat y mapas.</div>
+                </div>
+                <div class="endpoint-card">
+                    <div><span class="method get">WEB</span> <span class="url">APLICACION WEB</span></div>
+                    <div class="desc">Astro + TypeScript. Interfaz administrativa para empleados de farmacia: login y visualización/confirmación de recetas en PDF.</div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: DATOS -->
+            <div class="section" style="animation-delay: 0.3s;">
+                <div class="section-title">CAPA DE DATOS</div>
+                <div class="text-block">
+                    <strong>PostgreSQL en Supabase</strong> como persistencia compartida. <strong>Supabase Storage (S3)</strong> para documentos, fotografías y adjuntos. <strong>PostgREST</strong> para consultas administrativas controladas.
+                    <br><br>
+                    <strong>Entidades principales:</strong> usuarios y roles, pacientes y fichas clínicas, citas, recetas, exámenes, documentos, mensajes, alertas, ubicaciones y solicitudes de prótesis.
+                </div>
+                <div class="code-box">
+usuarios(id, rut_cifrado, rut_hash, nombre, rol_id, ...)
+pacientes(id, usuario_id, cobertura, ficha_clinica, ...)
+dispositivos(id, paciente_id, esp32_mac, ultima_conexion, ...)
+telemetria(id, dispositivo_id, bpm, spo2, bateria, lat, lng, timestamp)
+alertas(id, paciente_id, tipo, severidad, estado, timestamp)
+                </div>
+            </div>
+
+            <!-- SECTION 4: IOT -->
+            <div class="section" style="animation-delay: 0.45s;">
+                <div class="section-title">HARDWARE IoT</div>
+                <div class="text-block">
+                    El <strong>ESP32</strong> conecta la prótesis robótica con la plataforma mediante <strong>WiFi</strong> y <strong>Bluetooth Low Energy</strong>. Transmite frecuencia cardíaca (BPM), saturación de oxígeno (SpO2), nivel de batería y geolocalización.
+                    <br><br>
+                    Los umbrales de taquicardia, bradicardia y SpO2 baja generan alertas automáticas a médico y cuidador.
+                </div>
+            </div>
+
+            <!-- SECTION 5: STACK -->
+            <div class="section" style="animation-delay: 0.6s;">
+                <div class="section-title">STACK TECNOLOGICO</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:20px;">
+                    <div class="endpoint-card"><div><span class="url">BACKEND</span></div><div class="desc">Java 17 &middot; Spring Boot &middot; Spring Security &middot; JWT &middot; Maven</div></div>
+                    <div class="endpoint-card"><div><span class="url">MOVIL</span></div><div class="desc">Angular 20 &middot; Ionic 8 &middot; Capacitor 8 &middot; TypeScript</div></div>
+                    <div class="endpoint-card"><div><span class="url">ESCRITORIO</span></div><div class="desc">Electron &middot; HTML / CSS / JavaScript &middot; Leaflet</div></div>
+                    <div class="endpoint-card"><div><span class="url">WEB</span></div><div class="desc">Astro &middot; TypeScript &middot; interfaz administrativa</div></div>
+                    <div class="endpoint-card"><div><span class="url">DATOS</span></div><div class="desc">PostgreSQL &middot; Supabase &middot; Supabase Storage (S3) &middot; PostgREST</div></div>
+                    <div class="endpoint-card"><div><span class="url">TIEMPO REAL</span></div><div class="desc">Server-Sent Events (SSE) &middot; ESP32 &middot; WiFi / BLE</div></div>
+                </div>
+            </div>
+
+            <div class="footer">
+                END OF COMPONENT INTEL // HYDRA &middot; PROYECTO APT
+            </div>
+        </main>
+    </div>
+
+<script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playClickSound() {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(1500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0.02, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        }
+        document.querySelectorAll('a').forEach(a => { a.addEventListener('click', () => playClickSound()); });
+        document.addEventListener('mousemove', (e) => {
+            document.getElementById('hx').style.top = e.pageY + 'px';
+            document.getElementById('hy').style.left = e.pageX + 'px';
+            document.getElementById('ht').style.top = e.pageY + 'px';
+            document.getElementById('ht').style.left = e.pageX + 'px';
+        });
+        document.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('.section');
+            const wh = window.innerHeight;
+            sections.forEach(s => {
+                const rect = s.getBoundingClientRect();
+                const center = rect.top + rect.height / 2;
+                const offset = (center - wh / 2) / wh;
+                s.style.transform = `translateY(${offset * -6}px)`;
+            });
+        });
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('bootOverlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('bootOverlay').style.display = 'none', 500);
+            }, 800);
+        };
+    </script>
+<script src="audio.js" data-audio="mw.mp3"></script>
+</body>
+</html>
